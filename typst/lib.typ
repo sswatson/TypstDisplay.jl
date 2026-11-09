@@ -1,6 +1,6 @@
-// typst-display: the Typst half of TypstDisplay.jl.
+// typst-display: the Typst half of TypstDisplay (TypstDisplay.jl, typst-display-matlab).
 //
-// Julia emits markup that imports this package and calls `data-table` (for a
+// Julia or MATLAB emits markup that imports this package and calls `data-table` (for a
 // table) or Gribouille functions (for a plot). Everything Gribouille exports
 // is re-exported here, with `plot` replaced by a wrapper that applies the
 // document-wide defaults set with `configure`.

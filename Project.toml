@@ -10,26 +10,30 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 [weakdeps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Typstry = "f0ed7684-a786-439e-b1e3-3b82803b501e"
 
 [extensions]
 TypstDisplayDataFramesExt = "DataFrames"
 TypstDisplayIJuliaExt = "IJulia"
+TypstDisplayREPLExt = "REPL"
 TypstDisplayTypstryExt = "Typstry"
 
 [compat]
 DataFrames = "1"
 Dates = "1"
 IJulia = "1"
+REPL = "1"
 Tables = "1"
 Typstry = "0.7"
 julia = "1.10"
 
 [extras]
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Typstry = "f0ed7684-a786-439e-b1e3-3b82803b501e"
 
 [targets]
-test = ["Test", "DataFrames", "Typstry", "IJulia"]
+test = ["Test", "DataFrames", "Typstry", "IJulia", "REPL"]

@@ -26,7 +26,7 @@ using Dates: Dates, Date, DateTime
 using Tables: Tables
 
 export TypstCode, @tcode_str, TypstMarkup, typst_markup, typst_literal, typst_call
-export rows, pivot_longer, typst_table, G, GPlot, install_typst_package
+export rows, pivot_longer, typst_table, G, GPlot, install_typst_package, typst_show
 
 const TYPST_MIME = MIME"text/x-typst"
 # Both names are in use: `text/x-typst` by Calepin, `text/typst` by Typstry.jl.
@@ -39,5 +39,6 @@ include("typst_package.jl")
 include("markup.jl")
 include("tables.jl")
 include("gribouille.jl")
+include("show.jl")
 
 end # module

@@ -71,6 +71,6 @@ function Base.show(io::IO, ::MIME"text/plain", p::GPlot)
     data = something(findfirst(kv -> first(kv) === :data, p.call.kwargs), 0)
     n = data == 0 ? 0 : length(last(p.call.kwargs[data]))
     print(io, "GPlot (Gribouille, $n rows of data); displays as a plot in Typst.\n",
-          "Typst source: typst_markup(plot)")
+          "Standalone PDF: typst_show(plot); Typst source: typst_markup(plot)")
 end
 Base.show(io::IO, p::GPlot) = print(io, "GPlot(", length(p.call.kwargs), " arguments)")

@@ -5,6 +5,7 @@ using TypstDisplay
 using TypstDisplay: TYPST_MIME
 using Typstry: Typstry
 using IJulia: IJulia
+using REPL: REPL
 
 # Install into a throwaway package directory, never the user's.
 const PKGDIR = mktempdir()
@@ -150,6 +151,65 @@ else
             @test occursin("0.176", txt)          # 3 significant digits
             @test occursin("0.17620", txt)        # per-column override
             @test occursin("#not-markup", txt)    # strings are text, not markup
+        end
+    end
+
+    @testset "standalone PDFs" begin
+        dir = mktempdir()
+        df = DataFrame(x = [1, 2], y = [3.5, 4.0])
+        p = G.plot(df; mapping = G.aes(x = :x, y = :y), layers = [G.geom_point()])
+        values = Any[df, (; x = [1, 2], y = [3, 4]), p, typst_table(df; digits = (y = 3,)),
+                     TypstMarkup("Hello \$x^2\$")]
+        for (k, v) in enumerate(values)
+            # Shell metacharacters and Unicode must survive unchanged.
+            target = joinpath(dir, "résumé ' \$ ` $k.pdf")
+            pdf = typst_show(v; output = target, open = false)
+            @test pdf == target
+            @test read(pdf, 5) == b"%PDF-"
+        end
+        pdf = typst_show(df; open = false, width = "20cm", margin = tcode"1cm")
+        @test isabspath(pdf) && isfile(pdf) && readdir(dirname(pdf)) == ["display.pdf"]
+        rm(dirname(pdf); recursive = true)
+        # Relative output resolves against the working directory.
+        cd(dir) do
+            @test typst_show(df; output = "rel.pdf", open = false) == joinpath(realpath(dir), "rel.pdf")
+        end
+        # A failed compile leaves an existing output intact.
+        target = joinpath(dir, "keep.pdf")
+        write(target, "original")
+        @test_throws ErrorException typst_show(TypstMarkup("#unknown-function()"); output = target, open = false)
+        @test read(target, String) == "original"
+        @test_throws ArgumentError typst_show(df; output = joinpath(dir, "bad.txt"), open = false)
+        @test_throws ArgumentError typst_show(df; output = joinpath(dir, "missing", "x.pdf"), open = false)
+        @test_throws ArgumentError typst_show(42; open = false)
+        withenv("TYPST_BIN" => joinpath(dir, "nonexistent-typst")) do
+            @test_throws ErrorException typst_show(df; open = false)
+        end
+    end
+
+    @testset "plots open at the REPL" begin
+        opened = String[]
+        TypstDisplay.PDF_OPENER[] = pdf -> push!(opened, pdf)
+        try
+            p = G.plot((; x = [1, 2], y = [3, 4]); mapping = G.aes(x = :x, y = :y), layers = [G.geom_point()])
+            @test typst_show(p) == only(opened)
+            # The REPL's display, as when a chunk is sent to the REPL.
+            out = IOBuffer()
+            term = REPL.Terminals.TTYTerminal("dumb", devnull, out, devnull)
+            display(REPL.REPLDisplay(REPL.BasicREPL(term)), p)
+            text = String(take!(out))
+            @test length(opened) == 2
+            @test occursin("GPlot", text) && occursin("Opened $(opened[2])", text)
+            TypstDisplay.AUTO_SHOW[] = false
+            display(REPL.REPLDisplay(REPL.BasicREPL(term)), p)
+            @test length(opened) == 2 && !occursin("Opened", String(take!(out)))
+            # Tables at the REPL stay text.
+            display(REPL.REPLDisplay(REPL.BasicREPL(term)), DataFrame(a = [1]))
+            @test length(opened) == 2
+        finally
+            TypstDisplay.PDF_OPENER[] = nothing
+            TypstDisplay.AUTO_SHOW[] = true
+            foreach(pdf -> rm(dirname(pdf); recursive = true), opened)
         end
     end
 end

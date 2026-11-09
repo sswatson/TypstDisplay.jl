@@ -24,10 +24,15 @@ df
 ]
 ````
 
+There is a MATLAB twin, [typst-display-matlab](../typst-display-matlab), with
+the same API in MATLAB spelling. It vendors this repository's `typst/` package,
+which stays canonical here: edit it here, bump its version, and run that
+repository's `scripts/sync-typst-package.sh`.
+
 The repository holds both halves:
 
 ```
-Project.toml, src/, ext/   the Julia package
+Project.toml, src/, ext/   the Julia package (ext/: DataFrames, IJulia, REPL, Typstry)
 typst/                     the Typst package `@local/typst-display`
 test/                      tests, including compiling the output with real typst
 ```
@@ -67,9 +72,40 @@ test/                      tests, including compiling the output with real typst
 | `pivot_longer(t, cols; names_to, values_to)` | Wide to long, so several series share one `colour` mapping |
 | `typst_literal(x)` | The Typst source for a Julia value (numbers, strings, symbols, `nothing`/`missing`, dates, arrays, `NamedTuple`/`Dict`, nested) |
 | `typst_markup(x)` | The markup `x` displays as, for inspection |
+| `typst_show(x; output, open, width, margin)` | Render a standalone PDF and open it; returns its path. See below |
 
-A `GPlot`'s plain-text display is a one-line summary. Use `typst_markup(p)` to
+A `GPlot`'s plain-text display is a short summary. Use `typst_markup(p)` to
 see the generated Typst.
+
+## Outside a notebook: standalone PDFs
+
+At an interactive REPL, a plot opens as a PDF in your default viewer. So
+sending a chunk from a document to the REPL (vim-slime and the like) shows its
+plot, as the notebook would. Tables still print as text there; open one with
+`typst_show`:
+
+```julia
+typst_show(df)
+typst_show(typst_table(df; digits = (sd = 5,)))
+typst_show(p)                                       # p = G.plot(...)
+pdf = typst_show(p; output = "spread.pdf", open = false)
+```
+
+`typst_show(x; output, open = true, width = "16cm", margin = "0.5cm")` takes a
+`GPlot`, any table, or anything with a Typst display, and returns the PDF's
+absolute path. The page is `width` wide, with a height that fits the content.
+Without `output`, the PDF goes in a fresh temporary directory, which is kept so
+the viewer can go on reading it; the source and compiler log are removed. An
+`output` must end in `.pdf` and its directory must exist. A successful render
+replaces that file; a failed one leaves it alone. It needs the Typst CLI on
+`PATH`, or its path in `TYPST_BIN`.
+
+The REPL behaviour comes from a package extension on the `REPL` standard
+library, and it overrides only the REPL's own display, so notebooks (IJulia,
+Calepin) are unaffected. `TypstDisplay.AUTO_SHOW[] = false` turns it off. A
+project whose `Manifest.toml` predates this needs `Pkg.resolve()` once, so
+Julia sees the extension. [typst-display-matlab](../typst-display-matlab) has
+the same `typst_show`.
 
 ## Typst API (`@local/typst-display`)
 
